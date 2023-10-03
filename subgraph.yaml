@@ -3,22 +3,59 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: Contract
+    name: Factory
     network: base-testnet
     source:
       address: "0x6AA302De6dcA90AAA7335cC11b8bE0927DD2f25b"
-      abi: Contract
+      abi: Factory
       startBlock: 8243418
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
+      file: ./src/mappings/factory.ts
       entities:
-        - PairCreated
+        - Pair
+        - Token
       abis:
-        - name: Contract
-          file: ./abis/Contract.json
+        - name: Factory
+          file: ./abis/XProjectFactory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: PairCreated(indexed address,indexed address,address,uint256)
-          handler: handlePairCreated
-      file: ./src/contract.ts
+          handler: handleNewPair
+templates:
+  - kind: ethereum/contract
+    name: Pair
+    network: base-testnet
+    source:
+      abi: Pair
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mappings/core.ts
+      entities:
+        - Pair
+        - Token
+      abis:
+        - name: Pair
+          file: ./abis/XProjectPair.json
+        - name: Factory
+          file: ./abis/XProjectFactory.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
+          handler: handleSwap
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Sync(uint112,uint112)
+          handler: handleSync
